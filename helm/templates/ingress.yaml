@@ -1,5 +1,5 @@
 {{- if .Values.ingress.enabled }}
-{{- $fullName := include "aws.fullname" . -}}
+{{- $fullName := include "template.fullname" . -}}
 {{- $svcPort := .Values.service.port -}}
 {{- $namespace := .Release.Namespace -}}
 {{- $environment := .Values.global.environment -}}
@@ -30,7 +30,7 @@ metadata:
     {{- end }}
     {{- end }}
     {{- if .Values.ingress.externalDNS }}
-    external-dns.alpha.kubernetes.io/hostname: {{ include "aws.ingressHostname" . }}
+    external-dns.alpha.kubernetes.io/hostname: {{ include "template.ingressHostname" . }}
     external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.external_dns.target}}
     {{- end }}
     {{- if .Values.ingress.annotations }}
@@ -44,7 +44,7 @@ spec:
   ingressClassName: {{ .Values.ingress.ingressClassName | quote }}
   {{- end }}
   rules:
-    - host: {{ include "aws.ingressHostname" . }}
+    - host: {{ include "template.ingressHostname" . }}
       http:
         paths:
           {{- if .Values.ingress.extraPaths }}
@@ -71,7 +71,7 @@ spec:
   {{- if .Values.ingress.tls }}
   tls:
     - hosts:
-        - {{ include "aws.ingressHostname" . }}
-      secretName: {{ include "aws.ingressHostname" . | printf "%s-tls"}}
+        - {{ include "template.ingressHostname" . }}
+      secretName: {{ include "template.ingressHostname" . | printf "%s-tls"}}
   {{- end }}
 {{- end }}

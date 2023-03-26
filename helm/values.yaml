@@ -7,7 +7,7 @@ global:
 replicaCount: 1
 
 image:
-  repository: registry.infra.ankra.cloud/platform/aws
+  repository: registry.infra.ankra.cloud/platform/template
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
@@ -24,11 +24,11 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: "aws-sa"
+  name: "template-sa"
 
 podAnnotations:
-  ankra.app/app-name: "aws"
-  app: "aws"
+  ankra.app/app-name: "template"
+  app: "template"
 
 podSecurityContext: {}
   # fsGroup: 2000
@@ -179,12 +179,12 @@ affinity:
             topologyKey: "kubernetes.io/hostname"
             labelSelector:
               matchLabels:
-                app: "aws"
+                app: "template"
 
 worker:
   podAnnotations:
-    ankra.app/app-name: "aws-worker"
-    app: "aws-worker"
+    ankra.app/app-name: "template-worker"
+    app: "template-worker"
 
   podSecurityContext: {}
 
@@ -198,7 +198,7 @@ worker:
     annotations: {}
     # The name of the service account to use.
     # If not set and create is true, a name is generated using the fullname template
-    name: "aws-worker-sa"
+    name: "template-worker-sa"
 
   autoscaling:
     enabled: false

@@ -2,17 +2,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "aws.fullname" . }}-worker
+  name: {{ include "template.fullname" . }}-worker
   labels:
-    aws.type: "worker"
-    {{- include "aws.labels" . | nindent 4 }}
+    template.type: "worker"
+    {{- include "template.labels" . | nindent 4 }}
 spec:
 {{- if not .Values.worker.autoscaling.enabled }}
   replicas: {{ .Values.worker.replicaCount }}
 {{- end }}
   selector:
     matchLabels:
-      aws.type: "worker"
+      template.type: "worker"
   template:
     metadata:
     {{- with .Values.worker.podAnnotations }}
@@ -20,7 +20,7 @@ spec:
         {{- toYaml . | nindent 8 }}
     {{- end }}
       labels:
-        aws.type: "worker"
+        template.type: "worker"
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -63,6 +63,6 @@ spec:
       volumes:
         - name: src-volume
           hostPath:
-            path: /workdir/platform/aws/src
+            path: /workdir/platform/template/src
             type: Directory
       {{- end }}

@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "AWS API Mode is: $ENV"
+echo "Template API Mode is: $ENV"
 
 # Start Application
 if [[ "$APPLICATION_NAME" == "worker" ]];then
