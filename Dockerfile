@@ -3,7 +3,6 @@ FROM registry.infra.ankra.cloud/alpine/python3:11
 # Setup Portal
 ADD src/requirements.txt /opt/src/requirements.txt
 RUN pip3 install -r /opt/src/requirements.txt
-RUN pip3 install ankra==0.4.5a69
 ADD src /opt/src
 
 RUN apk add --no-cache openssl
