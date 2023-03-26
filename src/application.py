@@ -17,9 +17,9 @@ logging = get_logger()
 
 def initialize_blueprints(app: object) -> None:
     """Register Flask blueprints"""
-    from vault.api import vault_api_bp
+    from system.api import system_api_bp
     app.register_blueprint(
-        vault_api_bp
+        system_api_bp
     )
 
 

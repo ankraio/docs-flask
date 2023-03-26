@@ -1,0 +1,127 @@
+stages:
+  build:
+    - build
+    - tag_cleanup
+    - tag
+  predeploy:
+    - namespace
+    - cloudflare-credentials
+    - cloudflare-issuer
+  dev:
+    - dry-run
+    - deploy
+
+variables:
+  VERSION: v0.0.1
+  TARGET: dev
+  BUILD: false
+  DEPLOY: true
+  NAMESPACE: test
+  HELM_NAME: flask-template
+  HELM_CHART: helm/
+  SERVICE_NAME: flask-template
+
+predeploy:
+  target:
+    match:
+      name: $TARGET
+  namespace:
+    script:
+      - if [[ ! $(kubectl get ns $NAMESPACE) ]]; then
+          kubectl create ns $NAMESPACE;
+        fi
+  cloudflare-credentials:
+    secrets:
+      - ORIGIN_KEY
+      - REGISTRY_PASSWORD
+    script:
+      - if [[ ! $(kubectl get secret service-key -n $NAMESPACE) ]]; then
+          kubectl -n $NAMESPACE create secret generic service-key --from-literal key=${ORIGIN_KEY};
+        fi
+  cloudflare-issuer:
+    secrets:
+      - ORIGIN_KEY
+      - REGISTRY_PASSWORD
+    script:
+      
+      - if [[ ! $(kubectl get secret ankra-regcred -n $NAMESPACE) ]]; then kubectl -n $NAMESPACE create secret docker-registry ankra-regcred --docker-server=registry.infra.ankra.cloud --docker-username='robot$global' --docker-password=$REGISTRY_PASSWORD --docker-email=admin@ankra.io; fi
+      - kubectl -n $NAMESPACE apply -f https://artifact.infra.ankra.cloud/repository/ankra-install-public/manifests/origin-issuer.yaml
+
+build:
+  conditions:
+    - when: "$BUILD"
+  target:
+    match:
+      name: $TARGET
+  build:
+    docker:
+      - action: build
+        name: $PROJECT_NAME/$SERVICE_NAME
+        tag: $VERSION
+    helm:
+      - action: package
+        path: $WORKSPACE/helm
+        push: true
+  tag_cleanup:
+    allow_failure: true
+    git:
+      - action: delete_tag
+        provider: $GIT_PROVIDER
+        tag: $VERSION
+        name: $SERVICE_NAME
+        credential: $GIT_CREDENTIAL
+        path: $WORKSPACE
+      - action: push_delete_tag
+        name: $SERVICE_NAME
+        provider: $GIT_PROVIDER
+        credential: $GIT_CREDENTIAL
+        tag: $VERSION
+        path: $WORKSPACE
+  tag:
+    git:
+      - action: tag
+        message: "RSP $VERSION"
+        provider: $GIT_PROVIDER
+        tag: $VERSION
+        name: $SERVICE_NAME
+        credential: $GIT_CREDENTIAL
+        path: $WORKSPACE
+      - action: push_tag
+        name: $SERVICE_NAME
+        provider: $GIT_PROVIDER
+        credential: $GIT_CREDENTIAL
+        tag: $VERSION
+        path: $WORKSPACE
+dev:
+  conditions:
+    - when: "$DEPLOY"
+  target:
+    match:
+      name: $TARGET
+  dry-run:
+    helm:
+      - action: add
+        name: common
+        url: https://charts.bitnami.com/bitnami
+      - action: upgrade
+        build_dependencies: true
+        name: $HELM_NAME
+        namespace: $NAMESPACE
+        chart: $WORKSPACE/helm
+        extra_args:
+          - --set image.tag=$VERSION
+          - --dry-run
+  deploy:
+    helm:
+      - action: add
+        name: common
+        url: https://charts.bitnami.com/bitnami
+      - action: upgrade
+        build_dependencies: true
+        name: $HELM_NAME
+        namespace: $NAMESPACE
+        chart: $WORKSPACE/helm
+        extra_args:
+          - --set image.tag=$VERSION
+          - --set fullnameOverride=$HELM_NAME
+          - --set global.environment=prod
