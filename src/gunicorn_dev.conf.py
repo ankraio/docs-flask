@@ -1,0 +1,12 @@
+# import multiprocessing
+bind = "0.0.0.0:5000"
+workers = 1
+max_requests = 1000
+timeout = 60
+keep_alive = 1
+reload = "true"
+accesslog = "-"
+loglevel = "info"
+debug = "false"
+pythonpath = "/opt/src"
+threads = 24

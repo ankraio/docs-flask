@@ -1,0 +1,98 @@
+{{- $environment := .Values.global.environment -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aws.fullname" . }}
+  labels:
+    {{- include "aws.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "aws.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "aws.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ include "aws.serviceAccountName" . }}
+      containers:
+        - name: {{ include "aws.fullname" . }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- if eq $environment "prod" }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          {{- else }}
+          image: "{{ .Values.image.repository }}:{{ .Release.Namespace }}-latest"
+          {{ end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: {{ .Values.service.name }}
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          {{- if eq $environment "local" }}
+          volumeMounts:
+            - name: src-volume
+              mountPath: /opt/src
+            - name: ankra-volume
+              mountPath: /usr/local/lib/python3.10/site-packages/ankra
+          {{- end }}
+          env:
+          - name: APPLICATION_NAME
+            value: {{ .Chart.Name }}
+          - name: ENV
+            value: {{ $environment }}
+          - name: NAMESPACE
+            value: {{ .Release.Namespace }}
+          - name: SERVICE_ACCOUNT
+            value: {{ include "aws.serviceAccountName" . }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if eq $environment "local" }}
+      volumes:
+        - name: src-volume
+          hostPath:
+            path: /workdir/platform/aws/src
+            type: Directory
+        - name: ankra-volume
+          hostPath:
+            path: /workdir/common/ankra-libraries/ankra
+            type: Directory
+      {{ end }}
