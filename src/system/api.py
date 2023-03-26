@@ -1,6 +1,7 @@
 # External Imports
 import logging
 from flask import (
+    current_app as app,
     Blueprint,
     jsonify,
     request
@@ -31,7 +32,7 @@ def unseal():
             Flask Response: Flask Response Object
     """
     # Get system data
-    data=status()
+    data=status(app)
     # Check if data is empty
     if not data:
         return jsonify(

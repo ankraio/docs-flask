@@ -3,7 +3,7 @@ import time
 from flask import jsonify
 import psutil
 
-def status() -> dict:
+def status(app) -> dict:
     """
     Gets the status of the system.
 
