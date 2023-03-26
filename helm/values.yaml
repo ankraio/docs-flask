@@ -1,13 +1,13 @@
 # Default values for helm.
 # This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# Declare variables to be passed into your myapps.
 global:
   environment: "dev"
 
 replicaCount: 1
 
 image:
-  repository: registry.infra.ankra.cloud/platform/template
+  repository: registry.infra.ankra.cloud/platform/myapp
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
@@ -23,12 +23,12 @@ serviceAccount:
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: "template-sa"
+  # If not set and create is true, a name is generated using the fullname myapp
+  name: "myapp-sa"
 
 podAnnotations:
-  ankra.app/app-name: "template"
-  app: "template"
+  ankra.app/app-name: "myapp"
+  app: "myapp"
 
 podSecurityContext: {}
   # fsGroup: 2000
@@ -150,7 +150,7 @@ ingress:
   ##   certificate:
   ##
   secrets: []
-  ## @param ingress.extraRules The list of additional rules to be added to this ingress record. Evaluated as a template
+  ## @param ingress.extraRules The list of additional rules to be added to this ingress record. Evaluated as a myapp
   ## Useful when looking for additional customization, such as using different backend
   ##
   extraRules: []
@@ -179,29 +179,4 @@ affinity:
             topologyKey: "kubernetes.io/hostname"
             labelSelector:
               matchLabels:
-                app: "template"
-
-worker:
-  podAnnotations:
-    ankra.app/app-name: "template-worker"
-    app: "template-worker"
-
-  podSecurityContext: {}
-
-  replicaCount: 1
-
-  resources: {}
-  serviceAccount:
-    # Specifies whether a service account should be created
-    create: true
-    # Annotations to add to the service account
-    annotations: {}
-    # The name of the service account to use.
-    # If not set and create is true, a name is generated using the fullname template
-    name: "template-worker-sa"
-
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPUUtilizationPercentage: 70
+                app: "myapp"

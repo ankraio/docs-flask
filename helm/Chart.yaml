@@ -1,6 +1,6 @@
 apiVersion: v2
-name: template
-description: Ankra template is responsible for handling template related API calls.
+name: myapp
+description: Ankra myapp is responsible for handling myapp related API calls.
 type: application
 version: 0.1.1 # Chart version
 appVersion: 0.0.1 # Application version - Currently not used.

@@ -2,9 +2,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "template.fullname" . }}
+  name: {{ include "myapp.fullname" . }}
   labels:
-    {{- include "template.labels" . | nindent 4 }}
+    {{- include "myapp.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   strategy:
@@ -14,7 +14,7 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      {{- include "template.selectorLabels" . | nindent 6 }}
+      {{- include "myapp.selectorLabels" . | nindent 6 }}
   template:
     metadata:
     {{- with .Values.podAnnotations }}
@@ -22,7 +22,7 @@ spec:
         {{- toYaml . | nindent 8 }}
     {{- end }}
       labels:
-        {{- include "template.selectorLabels" . | nindent 8 }}
+        {{- include "myapp.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -30,9 +30,9 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      serviceAccountName: {{ include "template.serviceAccountName" . }}
+      serviceAccountName: {{ include "myapp.serviceAccountName" . }}
       containers:
-        - name: {{ include "template.fullname" . }}
+        - name: {{ include "myapp.fullname" . }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           {{- if eq $environment "prod" }}
@@ -60,7 +60,7 @@ spec:
           - name: NAMESPACE
             value: {{ .Release.Namespace }}
           - name: SERVICE_ACCOUNT
-            value: {{ include "template.serviceAccountName" . }}
+            value: {{ include "myapp.serviceAccountName" . }}
           livenessProbe:
             tcpSocket:
               port: {{ .Values.service.port }}
@@ -89,7 +89,7 @@ spec:
       volumes:
         - name: src-volume
           hostPath:
-            path: /workdir/platform/template/src
+            path: /workdir/platform/myapp/src
             type: Directory
         - name: ankra-volume
           hostPath:

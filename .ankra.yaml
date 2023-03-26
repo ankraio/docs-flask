@@ -17,9 +17,9 @@ variables:
   BUILD: false
   DEPLOY: true
   NAMESPACE: test
-  HELM_NAME: flask-template
+  HELM_NAME: myapp
   HELM_CHART: helm/
-  SERVICE_NAME: flask-template
+  SERVICE_NAME: myapp
 
 predeploy:
   target:
