@@ -19,7 +19,8 @@ variables:
   NAMESPACE: test
   HELM_NAME: myapp
   HELM_CHART: helm/
-  SERVICE_NAME: myapp
+  PROJECT_NAME: docs
+  SERVICE_NAME: flask
 
 predeploy:
   target:
