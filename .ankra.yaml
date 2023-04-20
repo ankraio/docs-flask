@@ -71,6 +71,7 @@ build:
       - action: package
         path: $WORKSPACE/helm
         push: true
+        repository: ankra
   tag_cleanup:
     allow_failure: true
     git:
