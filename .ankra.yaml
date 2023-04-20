@@ -16,7 +16,7 @@ variables:
   TARGET: dev
   BUILD: "false"
   DEPLOY: "true"
-  GIT_CREDENTIAL: gitlab
+  GIT_CREDENTIAL: github
   NAMESPACE: test
   HELM_NAME: myapp
   HELM_CHART: helm/
