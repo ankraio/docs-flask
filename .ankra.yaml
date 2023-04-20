@@ -14,8 +14,8 @@ stages:
 variables:
   VERSION: v0.0.1
   TARGET: dev
-  BUILD: false
-  DEPLOY: true
+  BUILD: "false"
+  DEPLOY: "true"
   NAMESPACE: test
   HELM_NAME: myapp
   HELM_CHART: helm/
