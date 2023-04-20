@@ -17,6 +17,7 @@ variables:
   BUILD: "false"
   DEPLOY: "true"
   GIT_CREDENTIAL: github
+  REGISTRY_CREDENTIAL: harbor-global
   NAMESPACE: test
   HELM_NAME: myapp
   HELM_CHART: helm/
