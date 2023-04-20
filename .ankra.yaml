@@ -21,6 +21,7 @@ variables:
   HELM_CHART: helm/
   PROJECT_NAME: docs
   SERVICE_NAME: flask
+  REPOSITORY_NAME: docs-flask
 
 predeploy:
   target:
@@ -58,6 +59,7 @@ build:
     docker:
       - action: build
         name: $PROJECT_NAME/$SERVICE_NAME
+        credential: harbor-global
         tag: $VERSION
     helm:
       - action: package
@@ -69,11 +71,11 @@ build:
       - action: delete_tag
         provider: $GIT_PROVIDER
         tag: $VERSION
-        name: $SERVICE_NAME
+        name: $REPOSITORY_NAME
         credential: $GIT_CREDENTIAL
         path: $WORKSPACE
       - action: push_delete_tag
-        name: $SERVICE_NAME
+        name: $REPOSITORY_NAME
         provider: $GIT_PROVIDER
         credential: $GIT_CREDENTIAL
         tag: $VERSION
@@ -84,11 +86,11 @@ build:
         message: "RSP $VERSION"
         provider: $GIT_PROVIDER
         tag: $VERSION
-        name: $SERVICE_NAME
+        name: $REPOSITORY_NAME
         credential: $GIT_CREDENTIAL
         path: $WORKSPACE
       - action: push_tag
-        name: $SERVICE_NAME
+        name: $REPOSITORY_NAME
         provider: $GIT_PROVIDER
         credential: $GIT_CREDENTIAL
         tag: $VERSION
