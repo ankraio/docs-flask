@@ -49,8 +49,6 @@ spec:
           volumeMounts:
             - name: src-volume
               mountPath: /opt/src
-            - name: ankra-volume
-              mountPath: /usr/local/lib/python3.10/site-packages/ankra
           {{- end }}
           env:
           - name: APPLICATION_NAME
@@ -90,9 +88,5 @@ spec:
         - name: src-volume
           hostPath:
             path: /workdir/platform/myapp/src
-            type: Directory
-        - name: ankra-volume
-          hostPath:
-            path: /workdir/common/ankra-libraries/ankra
             type: Directory
       {{ end }}

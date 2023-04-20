@@ -28,7 +28,4 @@ def create_app() -> Flask:
     # Setup JWT
     jwt.init_app(app)
 
-    logging.info(
-        f"Application running in {app.config['ENV']} mode"
-    )
     return app

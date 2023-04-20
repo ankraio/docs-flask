@@ -10,6 +10,6 @@ fi
 GUNI_CONFIG="/opt/src/gunicorn_${ENV}.conf.py"
 LOG_CONFIG="/opt/src/logging.conf"
 
-gunicorn --log-config "$LOG_CONFIG" \
+gunicorn  \
          --config "$GUNI_CONFIG" \
          wsgi:app
