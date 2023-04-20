@@ -16,6 +16,7 @@ variables:
   TARGET: dev
   BUILD: "false"
   DEPLOY: "true"
+  GIT_PROVIDER: github
   GIT_CREDENTIAL: github
   REGISTRY_CREDENTIAL: harbor-global
   NAMESPACE: test
