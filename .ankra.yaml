@@ -54,7 +54,7 @@ predeploy:
 
 build:
   conditions:
-    - when: "$BUILD"
+    - when: "$DEPLOY"
   target:
     match:
       name: $TARGET
