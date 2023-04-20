@@ -63,6 +63,10 @@ build:
         credential: harbor-global
         tag: $VERSION
     helm:
+      - action: add
+        name: ankra
+        url: https://registry.infra.ankra.cloud/chartrepo/charts
+        credential: $REGISTRY_CREDENTIAL
       - action: package
         path: $WORKSPACE/helm
         push: true
