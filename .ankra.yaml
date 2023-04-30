@@ -1,3 +1,4 @@
+# `Stages` are the order that the pipeline is executing the jobs. The each stage are executed sequentially.
 stages:
   build:
     - build
@@ -13,56 +14,95 @@ stages:
     - dry-run
     - deploy
 
+# `Variables` are the environment variables that are used in the pipeline. The variables are available to all jobs. The variables can be overridden in the job level.
+# Default Variables are available on top of these key/value.
 variables:
-  VERSION: v0.0.1
-  TARGET: dev
-  BUILD: "false"
-  DEPLOY: "true"
-  GIT_PROVIDER: github
-  GIT_CREDENTIAL: github
-  REGISTRY_CREDENTIAL: harbor-global
-  NAMESPACE: test
-  HELM_NAME: myapp
-  HELM_CHART: helm/
-  PROJECT_NAME: docs
-  SERVICE_NAME: flask
-  REPOSITORY_NAME: docs-flask
+  - VERSION:
+    options:
+      - $COMMIT_ID
+    description: Select your version.
+  - TARGET: 
+    options:
+      - dev
+      - test
+      - prod
+    description: Select your environment.
+  - BUILD:
+    options:
+      - "true"
+      - "false"
+    description: Build application and dependencies.
+  - DEPLOY:
+    options:
+      - "true"
+      - "false"
+    description: Deploy application and dependencies.
+  - GIT_CREDENTIAL: 
+    options:
+      - $GIT_CREDENTIAL
+    description: Select your git credential.
+  - NAMESPACE: 
+    options:
+      - test
+      - dev
+    description: Select your namespace.
 
+# `build` is the job that is executed in the `build` stage.
 build:
+  # `conditions` are the conditions that the stage is executed.
   conditions:
-    - when: "$DEPLOY"
+    # When handles general condition handling in UNIX format.
+    - when: "$BUILD"
+  # `target` is the target that the stage is executed.
   target:
+    # `match` is the target that the stage is executed.
     match:
+      # `name` is the name of the target
       name: $TARGET
+  # `build` is the a job in this stage.
   build:
+    # `docker` is the docker module.
     docker:
+    # `actions` are the actions that the docker module is executed.
       actions:
         - action: build
-          name: $PROJECT_NAME/$SERVICE_NAME
+          name: $PROJECT_NAME/$APPLICATION_NAME
           tag: $VERSION
+    # `helm` is the helm module.
     helm:
+      # `actions` are the actions that the helm module is executed.
       actions:
         - action: package
           path: $WORKSPACE/helm
           push: true
-  
+
+# `tag` is the stage.
 tag:
+  # `conditions` are the conditions that the stage is executed.
   conditions:
-    - when: "$DEPLOY"
+    - when: "$BUILD"
+  # `target` is the target that the stage is executed.
   target:
     match:
       name: $TARGET
+  # `cleanup` is the a job in this stage. This job is executed to clean up any tag conflicts.
   cleanup:
+    # `allow_failure` is the flag that the job is allowed to fail.
     allow_failure: true
+    # `git` is the git module.
     git:
+      # Keys defined at this level are global keys available to all actions.
       provider: $GIT_PROVIDER
       credential: $GIT_CREDENTIAL
       tags: $VERSION
+      # `actions` are the actions that the git module is executed.
       actions:
         - action: delete_tag
         - action: push_tag
+  # `tag` is the a job in this stage. This job is executed to create a tag.
   tag:
     git:
+      # Keys defined at this level are global keys available to all actions.
       provider: $GIT_PROVIDER
       credential: $GIT_CREDENTIAL
       tags: $VERSION
@@ -72,16 +112,25 @@ tag:
         - action: push_tag
 
 predeploy:
+  # `conditions` are the conditions that the stage is executed.
+  conditions:
+    - when: "$DEPLOY"
+  # `target` is the target that the stage is executed.
   target:
     match:
       name: $TARGET
+  # `namespace` is the a job in this stage. This job is executed to create a namespace.
   namespace:
+    # `script` is the script module.
     script:
+      # `commands` are the commands that the script module is executed.
       commands:
       - if [[ ! $(kubectl get ns $NAMESPACE) ]]; then
           kubectl create ns $NAMESPACE;
         fi
+  # `cloudflare-credentials` is the a job in this stage. This job is executed to create a secret for cloudflare.
   cloudflare-credentials:
+    # `secrets` are the secrets available to this job.
     secrets:
       - ORIGIN_KEY
       - REGISTRY_PASSWORD
@@ -90,12 +139,15 @@ predeploy:
         - if [[ ! $(kubectl get secret service-key -n $NAMESPACE) ]]; then
             kubectl -n $NAMESPACE create secret generic service-key --from-literal key=${ORIGIN_KEY};
           fi
+  # `cloudflare-issuer` is the a job in this stage. This job is executed to create a cloudflare issuer.
   cloudflare-issuer:
+    # `secrets` are the secrets available to this job.
     secrets:
       - ORIGIN_KEY
     script:
       commands:
         - kubectl -n $NAMESPACE apply -f https://artifact.infra.ankra.cloud/repository/ankra-install-public/manifests/origin-issuer.yaml
+  # `registry-secret` is the a job in this stage. This job is executed to create a secret for registry.
   registry-secret:
     secrets:
       - REGISTRY_ROBOT_ACCOUNT
@@ -105,25 +157,31 @@ predeploy:
         - if [[ ! $(kubectl get secret ankra-regcred -n $NAMESPACE) ]]; then
             kubectl -n $NAMESPACE create secret docker-registry ankra-regcred --docker-server='$REGISTRY_URI' --docker-username='$REGISTRY_ROBOT_ACCOUNT' --docker-password='$REGISTRY_ROBOT_ACCOUNT_PASSWORD'
           fi
+# `dev` is the stage.
 dev:
+  # `conditions` are the conditions that the stage is executed.
   conditions:
     - when: "$DEPLOY"
+  # `target` is the target that the stage is executed.
   target:
     match:
       name: $TARGET
+  # `dry-run` is the a job in this stage. This job is executed to deploy the helm chart in dry-run mode.
   dry-run:
     helm:
       actions:
+        # `add_repository` is the action that adds a helm repository. This is used to add additional depedencies for the general flow.
         - action: add_repository
           name: common
           url: https://charts.bitnami.com/bitnami
         - action: upgrade
-          name: $HELM_NAME
+          name: $APPLICATION_NAME
           namespace: $NAMESPACE
           chart: $WORKSPACE/helm
           extra_args:
             - --set image.tag=$VERSION
             - --dry-run
+  # `deploy` is the a job in this stage. This job is executed to deploy the helm chart.
   deploy:
     helm:
       actions:
@@ -131,10 +189,10 @@ dev:
           name: common
           url: https://charts.bitnami.com/bitnami
         - action: upgrade
-          name: $HELM_NAME
+          name: $APPLICATION_NAME
           namespace: $NAMESPACE
           chart: $WORKSPACE/helm
           extra_args:
             - --set image.tag=$VERSION
-            - --set fullnameOverride=$HELM_NAME
+            - --set fullnameOverride=$APPLICATION_NAME
             - --set global.environment=prod

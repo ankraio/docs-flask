@@ -18,5 +18,5 @@ The `.ankra.yaml` file is used for configuring the deployment of a cloud-native 
 - **tag_cleanup**: Deletes old tags and pushes the new ones to the Git repository.
 - **dev**: Contains actions for deploying the application, including upgrading Helm charts and setting environment variables.
 
-read more: https://ankra.gitbook.io/docs-flask/ankra-yaml-file
+read more: https://docs.ankra.io/docs-flask/ankra-yaml-file
 
