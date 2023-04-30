@@ -8,18 +8,15 @@ In this repository, we aim to provide insights into how the .ankra.yaml file wor
 Thank you for choosing Ankra, and we hope that our repository will help you deploy your applications with ease and efficiency.
 
 ## What is the `.ankra.yaml` file?
-The `.ankra.yaml` file is used for configuring the deployment of a cloud-native application. It defines the CICD flow in stages such as build, predeploy, and development. The file sets environment variables and secrets used during deployment, and contains scripts and actions executed at different stages, such as building Docker images and upgrading Helm charts. Here's a quick breakdown:
 
-*stages*: Defines the different stages of the deployment flow, such as building, predeploy, and development, and lists the actions to be taken in each stage.
+The `.ankra.yaml` file is used for configuring the deployment of a cloud-native application. It defines the CICD flow in stages such as **build**, **predeploy**, and **development**. The file sets environment variables and secrets used during deployment, and contains scripts and actions executed at different stages, such as building Docker images and upgrading Helm charts. Here's a quick breakdown:
 
-*variables*: Sets environment variables and secrets used during deployment, such as the version number, target environment, and registry credentials.
-
-*predeploy*: Contains actions to be executed before deployment, such as creating namespaces and setting up credentials for Cloudflare and Docker registry.
-
-*build*: Contains actions for building Docker images and creating Helm charts.
-
-*tag_cleanup*: Deletes old tags and pushes the new ones to the Git repository.
-
-*dev*: Contains actions for deploying the application, including upgrading Helm charts and setting environment variables.
+- **stages**: Defines the different stages of the deployment flow, such as building, predeploy, and development, and lists the actions to be taken in each stage.
+- **variables**: Sets environment variables and secrets used during deployment, such as the version number, target environment, and registry credentials.
+- **predeploy**: Contains actions to be executed before deployment, such as creating namespaces and setting up credentials for Cloudflare and Docker registry.
+- **build**: Contains actions for building Docker images and creating Helm charts.
+- **tag_cleanup**: Deletes old tags and pushes the new ones to the Git repository.
+- **dev**: Contains actions for deploying the application, including upgrading Helm charts and setting environment variables.
 
 read more: https://ankra.gitbook.io/docs-flask/ankra-yaml-file
+
