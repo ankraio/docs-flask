@@ -1,7 +1,8 @@
 stages:
   build:
     - build
-    - tag_cleanup
+  tag:
+    - cleanup
     - tag
   predeploy:
     - namespace
@@ -71,7 +72,14 @@ build:
         - action: package
           path: $WORKSPACE/helm
           push: true
-  tag_cleanup:
+  
+tag:
+  conditions:
+    - when: "$DEPLOY"
+  target:
+    match:
+      name: $TARGET
+  cleanup:
     allow_failure: true
     git:
       provider: $GIT_PROVIDER
