@@ -8,6 +8,7 @@ stages:
     - namespace
     - cloudflare-credentials
     - cloudflare-issuer
+    - registry-secret
   dev:
     - dry-run
     - deploy
@@ -26,34 +27,6 @@ variables:
   PROJECT_NAME: docs
   SERVICE_NAME: flask
   REPOSITORY_NAME: docs-flask
-
-predeploy:
-  target:
-    match:
-      name: $TARGET
-  namespace:
-    script:
-      commands:
-      - if [[ ! $(kubectl get ns $NAMESPACE) ]]; then
-          kubectl create ns $NAMESPACE;
-        fi
-  cloudflare-credentials:
-    secrets:
-      - ORIGIN_KEY
-      - REGISTRY_PASSWORD
-    script:
-      commands:
-        - if [[ ! $(kubectl get secret service-key -n $NAMESPACE) ]]; then
-            kubectl -n $NAMESPACE create secret generic service-key --from-literal key=${ORIGIN_KEY};
-          fi
-  cloudflare-issuer:
-    secrets:
-      - ORIGIN_KEY
-      - REGISTRY_PASSWORD
-    script:
-      commands:
-        - if [[ ! $(kubectl get secret ankra-regcred -n $NAMESPACE) ]]; then kubectl -n $NAMESPACE create secret docker-registry ankra-regcred --docker-server=registry.infra.ankra.cloud --docker-username='robot$global' --docker-password=$REGISTRY_PASSWORD --docker-email=admin@ankra.io; fi
-        - kubectl -n $NAMESPACE apply -f https://artifact.infra.ankra.cloud/repository/ankra-install-public/manifests/origin-issuer.yaml
 
 build:
   conditions:
@@ -97,6 +70,41 @@ tag:
         - action: tag
           message: "RSP $VERSION"
         - action: push_tag
+
+predeploy:
+  target:
+    match:
+      name: $TARGET
+  namespace:
+    script:
+      commands:
+      - if [[ ! $(kubectl get ns $NAMESPACE) ]]; then
+          kubectl create ns $NAMESPACE;
+        fi
+  cloudflare-credentials:
+    secrets:
+      - ORIGIN_KEY
+      - REGISTRY_PASSWORD
+    script:
+      commands:
+        - if [[ ! $(kubectl get secret service-key -n $NAMESPACE) ]]; then
+            kubectl -n $NAMESPACE create secret generic service-key --from-literal key=${ORIGIN_KEY};
+          fi
+  cloudflare-issuer:
+    secrets:
+      - ORIGIN_KEY
+    script:
+      commands:
+        - kubectl -n $NAMESPACE apply -f https://artifact.infra.ankra.cloud/repository/ankra-install-public/manifests/origin-issuer.yaml
+  registry-secret:
+    secrets:
+      - REGISTRY_ROBOT_ACCOUNT
+      - REGISTRY_ROBOT_ACCOUNT_PASSWORD
+    script:
+      commands:
+        - if [[ ! $(kubectl get secret ankra-regcred -n $NAMESPACE) ]]; then
+            kubectl -n $NAMESPACE create secret docker-registry ankra-regcred --docker-server='$REGISTRY_URI' --docker-username='$REGISTRY_ROBOT_ACCOUNT' --docker-password='$REGISTRY_ROBOT_ACCOUNT_PASSWORD'
+          fi
 dev:
   conditions:
     - when: "$DEPLOY"
