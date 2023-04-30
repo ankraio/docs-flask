@@ -48,7 +48,6 @@ predeploy:
       - ORIGIN_KEY
       - REGISTRY_PASSWORD
     script:
-      
       - if [[ ! $(kubectl get secret ankra-regcred -n $NAMESPACE) ]]; then kubectl -n $NAMESPACE create secret docker-registry ankra-regcred --docker-server=registry.infra.ankra.cloud --docker-username='robot$global' --docker-password=$REGISTRY_PASSWORD --docker-email=admin@ankra.io; fi
       - kubectl -n $NAMESPACE apply -f https://artifact.infra.ankra.cloud/repository/ankra-install-public/manifests/origin-issuer.yaml
 
@@ -60,49 +59,32 @@ build:
       name: $TARGET
   build:
     docker:
-      - action: build
-        name: $PROJECT_NAME/$SERVICE_NAME
-        credential: harbor-global
-        tag: $VERSION
+      actions:
+        - action: build
+          name: $PROJECT_NAME/$SERVICE_NAME
+          tag: $VERSION
     helm:
-      - action: add
-        name: ankra
-        url: https://registry.infra.ankra.cloud/chartrepo/charts
-        credential: $REGISTRY_CREDENTIAL
-      - action: package
-        path: $WORKSPACE/helm
-        push: true
-        repository: ankra
+      actions:
+        - action: package
+          path: $WORKSPACE/helm
+          push: true
   tag_cleanup:
     allow_failure: true
     git:
+      provider: $GIT_PROVIDER
+      credential: $GIT_CREDENTIAL
+      tags: $VERSION
+      actions:
       - action: delete_tag
-        provider: $GIT_PROVIDER
-        tag: $VERSION
-        name: $REPOSITORY_NAME
-        credential: $GIT_CREDENTIAL
-        path: $WORKSPACE
-      - action: push_delete_tag
-        name: $REPOSITORY_NAME
-        provider: $GIT_PROVIDER
-        credential: $GIT_CREDENTIAL
-        tag: $VERSION
-        path: $WORKSPACE
+      - action: push_tag
   tag:
     git:
+      provider: $GIT_PROVIDER
+      credential: $GIT_CREDENTIAL
+      tags: $VERSION
       - action: tag
         message: "RSP $VERSION"
-        provider: $GIT_PROVIDER
-        tag: $VERSION
-        name: $REPOSITORY_NAME
-        credential: $GIT_CREDENTIAL
-        path: $WORKSPACE
       - action: push_tag
-        name: $REPOSITORY_NAME
-        provider: $GIT_PROVIDER
-        credential: $GIT_CREDENTIAL
-        tag: $VERSION
-        path: $WORKSPACE
 dev:
   conditions:
     - when: "$DEPLOY"
@@ -111,11 +93,10 @@ dev:
       name: $TARGET
   dry-run:
     helm:
-      - action: add
+      - action: add_repository
         name: common
         url: https://charts.bitnami.com/bitnami
       - action: upgrade
-        build_dependencies: true
         name: $HELM_NAME
         namespace: $NAMESPACE
         chart: $WORKSPACE/helm
@@ -128,7 +109,6 @@ dev:
         name: common
         url: https://charts.bitnami.com/bitnami
       - action: upgrade
-        build_dependencies: true
         name: $HELM_NAME
         namespace: $NAMESPACE
         chart: $WORKSPACE/helm
