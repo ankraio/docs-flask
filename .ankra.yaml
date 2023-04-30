@@ -111,7 +111,7 @@ dev:
   deploy:
     helm:
       actions:
-        - action: add
+        - action: add_repository
           name: common
           url: https://charts.bitnami.com/bitnami
         - action: upgrade
