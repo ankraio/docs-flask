@@ -1,6 +1,8 @@
 # `Stages` are the order that the pipeline is executing the jobs. The each stage are executed sequentially.
 stages:
+  # `build` is the stage
   build:
+    # each item in this list is a job.
     - build
   tag:
     - cleanup
