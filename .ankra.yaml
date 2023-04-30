@@ -17,9 +17,12 @@ stages:
 # `Variables` are the environment variables that are used in the pipeline. The variables are available to all jobs. The variables can be overridden in the job level.
 # Default Variables are available on top of these key/value.
 variables:
+  # `VERSION` is the name of the global variable
   - VERSION:
+    # `options` are the options that the variable can be selected.
     options:
       - $COMMIT_ID
+    # `description` is the description of the variable. This will be displayed in the deploy page.
     description: Select your version.
   - TARGET: 
     options:
