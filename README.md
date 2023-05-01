@@ -19,3 +19,4 @@ The `.ankra.yaml` file is used for configuring the deployment of a cloud-native 
 - **dev**: Contains actions for deploying the application, including upgrading Helm charts and setting environment variables.
 
 read more: https://docs.ankra.io/docs-flask/ankra-yaml-file
+
