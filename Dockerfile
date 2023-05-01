@@ -1,6 +1,8 @@
-FROM python:3.11.3-alpine
+FROM python:3.11-alpine
 
-# Setup Portal
+RUN apk add build-base libffi-dev openssl-dev python3-dev
+
+# Setup Example
 ADD src/requirements.txt /opt/src/requirements.txt
 RUN pip3 install -r /opt/src/requirements.txt
 ADD src /opt/src
