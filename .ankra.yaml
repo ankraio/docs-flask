@@ -3,7 +3,7 @@ stages:
   # `build` is the stage
   build:
     # each item in this list is a job.
-    - build
+    - image
   tag:
     - cleanup
     - tag
@@ -20,73 +20,80 @@ stages:
 # Default Variables are available on top of these key/value.
 variables:
   # `VERSION` is the name of the global variable
-  - VERSION:
+  - name: VERSION
     # `options` are the options that the variable can be selected.
-    options:
-      - $COMMIT_ID
+    value: "$COMMIT_ID"
     # `description` is the description of the variable. This will be displayed in the deploy page.
-    description: Select your version.
-  - TARGET: 
+    description: "Select your version."
+  - name: GIT_CREDENTIAL 
+    value: "github"
+    description: "Credential to use for git related actions."
+  - name: TARGET
+    default: "dev"
     options:
-      - dev
-      - test
-      - prod
-    description: Select your environment.
-  - BUILD:
+      - "dev"
+      - "test"
+      - "prod"
+    description: "Which cluster to deploy to."
+  - name: BUILD
+    default: "false"
     options:
       - "true"
       - "false"
-    description: Build application and dependencies.
-  - DEPLOY:
+  - name: TAG
+    default: "false"
     options:
       - "true"
       - "false"
-    description: Deploy application and dependencies.
-  - GIT_CREDENTIAL: 
+    description: "If application should be tagged."
+  - name: DEPLOY
+    default: "false"
     options:
-      - $GIT_CREDENTIAL
-    description: Select your git credential.
-  - NAMESPACE: 
+      - "true"
+      - "false"
+    description: "If application and dependencies should be deployed."
+  - name: NAMESPACE
+    default: "test"
     options:
-      - test
-      - dev
-    description: Select your namespace.
+      - "test"
+      - "dev"
+    description: "Namespace to deploy in."
 
-# `build` is the job that is executed in the `build` stage.
+# `build` is the name of the stage.
 build:
-  # `conditions` are the conditions that the stage is executed.
+  # `conditions` state the conditions that must be met to execute stage.
   conditions:
     # When handles general condition handling in UNIX format.
     - when: "$BUILD"
-  # `target` is the target that the stage is executed.
+  # `target` is the cluster the stage is executed on.
   target:
-    # `match` is the target that the stage is executed.
+    # `match` clusters on the parameters provided.
     match:
       # `name` is the name of the target
       name: $TARGET
-  # `build` is the a job in this stage.
-  build:
+  # `image` is the a job in this stage.
+  image:
     # `docker` is the docker module.
     docker:
-    # `actions` are the actions that the docker module is executed.
+    # `actions` are the actions that the docker module will execute.
       actions:
         - action: build
           name: $PROJECT_NAME/$APPLICATION_NAME
           tag: $VERSION
     # `helm` is the helm module.
     helm:
-      # `actions` are the actions that the helm module is executed.
+      # `actions` are the actions that the helm module will execute.
       actions:
         - action: package
           path: $WORKSPACE/helm
           push: true
 
-# `tag` is the stage.
+# `tag` is the name of the stage.
 tag:
-  # `conditions` are the conditions that the stage is executed.
+  # `conditions` state the conditions that must be met to execute stage.
   conditions:
-    - when: "$BUILD"
-  # `target` is the target that the stage is executed.
+    - when: "$TAG"
+  # `target` is the cluster the stage is executed on.
   target:
     match:
       name: $TARGET
@@ -99,7 +106,7 @@ tag:
       # Keys defined at this level are global keys available to all actions.
       provider: $GIT_PROVIDER
       credential: $GIT_CREDENTIAL
-      tags: $VERSION
+      tag: $VERSION
       # `actions` are the actions that the git module is executed.
       actions:
         - action: delete_tag
@@ -110,12 +117,13 @@ tag:
       # Keys defined at this level are global keys available to all actions.
       provider: $GIT_PROVIDER
       credential: $GIT_CREDENTIAL
-      tags: $VERSION
+      tag: $VERSION
       actions:
         - action: tag
-          message: "RSP $VERSION"
+          message: "$APPLICATION_NAME $VERSION"
         - action: push_tag
 
+# `predeploy` is the name of the stage.
 predeploy:
   # `conditions` are the conditions that the stage is executed.
   conditions:
@@ -138,7 +146,6 @@ predeploy:
     # `secrets` are the secrets available to this job.
     secrets:
       - ORIGIN_KEY
-      - REGISTRY_PASSWORD
     script:
       commands:
         - if [[ ! $(kubectl get secret service-key -n $NAMESPACE) ]]; then
@@ -159,9 +166,10 @@ predeploy:
       - REGISTRY_ROBOT_ACCOUNT_PASSWORD
     script:
       commands:
-        - if [[ ! $(kubectl get secret ankra-regcred -n $NAMESPACE) ]]; then
-            kubectl -n $NAMESPACE create secret docker-registry ankra-regcred --docker-server='$REGISTRY_URI' --docker-username='$REGISTRY_ROBOT_ACCOUNT' --docker-password='$REGISTRY_ROBOT_ACCOUNT_PASSWORD'
+        - if [[ ! $(kubectl get secret $APPLICATION_NAME-regcred -n $NAMESPACE) ]]; then
+            kubectl -n $NAMESPACE create secret docker-registry $APPLICATION_NAME-regcred --docker-server='$REGISTRY_URI' --docker-username='$REGISTRY_ROBOT_ACCOUNT' --docker-password='$REGISTRY_ROBOT_ACCOUNT_PASSWORD'
           fi
+
 # `dev` is the stage.
 dev:
   # `conditions` are the conditions that the stage is executed.
