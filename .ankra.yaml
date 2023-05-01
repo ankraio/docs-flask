@@ -4,6 +4,7 @@ stages:
   build:
     # each item in this list is a job.
     - image
+    - chart
   tag:
     - cleanup
     - tag
@@ -11,7 +12,6 @@ stages:
     - namespace
     - cloudflare-credentials
     - cloudflare-issuer
-    - registry-secret
   dev:
     - dry-run
     - deploy
@@ -80,6 +80,7 @@ build:
         - action: build
           name: $PROJECT_NAME/$APPLICATION_NAME
           tag: $VERSION
+  chart:
     # `helm` is the helm module.
     helm:
       # `actions` are the actions that the helm module will execute.
@@ -159,16 +160,6 @@ predeploy:
     script:
       commands:
         - kubectl -n $NAMESPACE apply -f https://artifact.infra.ankra.cloud/repository/ankra-install-public/manifests/origin-issuer.yaml
-  # `registry-secret` is the a job in this stage. This job is executed to create a secret for registry.
-  registry-secret:
-    secrets:
-      - REGISTRY_ROBOT_ACCOUNT
-      - REGISTRY_ROBOT_ACCOUNT_PASSWORD
-    script:
-      commands:
-        - if [[ ! $(kubectl get secret $APPLICATION_NAME-regcred -n $NAMESPACE) ]]; then
-            kubectl -n $NAMESPACE create secret docker-registry $APPLICATION_NAME-regcred --docker-server='$REGISTRY_URI' --docker-username='$REGISTRY_ROBOT_ACCOUNT' --docker-password='$REGISTRY_ROBOT_ACCOUNT_PASSWORD'
-          fi
 
 # `dev` is the stage.
 dev:
@@ -188,12 +179,13 @@ dev:
           name: common
           url: https://charts.bitnami.com/bitnami
         - action: upgrade
+          build_dependencies: true
           name: $APPLICATION_NAME
           namespace: $NAMESPACE
           chart: $WORKSPACE/helm
+          dry_run: true
           extra_args:
             - --set image.tag=$VERSION
-            - --dry-run
   # `deploy` is the a job in this stage. This job is executed to deploy the helm chart.
   deploy:
     helm:
@@ -205,6 +197,7 @@ dev:
           name: $APPLICATION_NAME
           namespace: $NAMESPACE
           chart: $WORKSPACE/helm
+          build_dependencies: true
           extra_args:
             - --set image.tag=$VERSION
             - --set fullnameOverride=$APPLICATION_NAME
