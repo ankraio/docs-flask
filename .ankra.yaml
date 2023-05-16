@@ -58,6 +58,12 @@ variables:
       - "test"
       - "dev"
     description: "Namespace to deploy in."
+  - name: SERVICE_URL
+    default: "myapp.myorg.ankra.app"
+    options:
+      - "myapp.myorg.ankra.app"
+      - "myapp.dev.myorg.ankra.app"
+    description: "Service URL to deploy in."
 
 # `build` is the name of the stage.
 build:
